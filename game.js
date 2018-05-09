@@ -73,8 +73,11 @@ class Level {
 
     this.player = null;
 
+    // тут можно просто выбросить исключение, если actors не определён,
+    // потому что без этого ничего работать не будет
     if (actors !== undefined) {
       this.actors = actors;
+      // для поиска объектов в массиве есть специльный метод
       for (let a of actors) {
         if (a.type === 'player') {
           this.player = a;
@@ -85,7 +88,10 @@ class Level {
 
     this.height = 0;
     this.width = 0;
+    // аналогично actors
     if (grid) {
+      // можно немного проще написать с помощью reduce
+      // или с помощью map и Math.max
       grid.forEach(row => this.width = (row.length > this.width ? row.length : this.width));
       this.height = grid.length;
     }
@@ -105,6 +111,7 @@ class Level {
     return this.actors.find(elements => actor.isIntersect(elements));
   }
   obstacleAt(position, size) {
+    // тут можно не создавать объект только ради того, чтобы прибавить размер к координатам
     const actor = new Actor(position, size);
 
 
@@ -116,8 +123,11 @@ class Level {
       return 'wall';
     }
 
+    // округлённые значения лушче сохранить в переменных, чтобы не округлять на каждой итараци
     for (let i = Math.floor(actor.left); i < actor.right; i++) {
       for (let j = Math.floor(actor.top); j < actor.bottom; j++) {
+        // можно написать просто if (this.grid[j][i])
+        // а ещё лучше this.grid[j][i] записать в переменную, чтобы 2 раза не писать
         if (this.grid[j][i] !== undefined) {
           return this.grid[j][i];
         }
@@ -126,6 +136,8 @@ class Level {
   }
   removeActor(actor) {
     for (let i in this.actors) {
+      // this.actors.hasOwnProperty(i) можно не проверять, там дальше сравнение с actor
+      // для поиска индекса объекта в массиве есть метод
       if (this.actors.hasOwnProperty(i) && actor === this.actors[i]) {
         this.actors.splice(i, 1);
         return;
@@ -133,6 +145,7 @@ class Level {
     }
   }
   noMoreActors(type) {
+    // код можно упростить с помощью метода some
     if (this.actors.length === 0) {
       return true;
     }
@@ -165,10 +178,13 @@ class Level {
 }
 
 class LevelParser {
+  // можно добавить значение по-умолчанию
   constructor(list) {
+    // list не очень удачное название, ведь это не массив, а объект
     this.list = list;
   }
   actorFromSymbol(symbol) {
+    // что изменится, если убрать все проверки?
     if (symbol === undefined || this.list === undefined) {
       return undefined;
     }
@@ -177,6 +193,8 @@ class LevelParser {
       return this.list[symbol];
     }
 
+    // это лишняя строчка, функция и так возвращает undefined,
+    // если не указано другое
     return undefined;
   }
 
@@ -184,6 +202,7 @@ class LevelParser {
     let result;
     switch (symbol) {
       case 'x':
+        // тут можно сразу написать return 'wall'
         result = 'wall';
         break;
       case '!':
@@ -228,9 +247,11 @@ class Fireball extends Actor {
     return 'fireball';
   }
   getNextPosition(time = 1) {
+    // тут нужно использовать методы класса Vector
     return new Vector(this.pos.x + this.speed.x * time, this.pos.y + this.speed.y * time);
   }
   handleObstacle() {
+    // тут тоже
     this.speed.x *= -1;
     this.speed.y *= -1;
   }
@@ -262,6 +283,8 @@ class FireRain extends Fireball {
     this.originalPosition = position;
   }
   handleObstacle() {
+    // не нужно мутировать объекты типа Vector,
+    // тут достаточно просто присвоения (сначала нужно исправить замечания выше)
     this.pos.x = this.originalPosition.x;
     this.pos.y = this.originalPosition.y;
   }
